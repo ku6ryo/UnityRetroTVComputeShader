@@ -1,0 +1,28 @@
+#pragma kernel CSMain
+
+Texture2D<float4> Input;
+RWTexture2D<float4> Result;
+
+float xIntensity;
+float time;
+
+#define PI 3.14159265359
+
+[numthreads(8, 8, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+  float xPhase = sin(id.x / 10) * xIntensity;
+  float r = Input[id.xy + float2(xPhase, xPhase)].x;
+  float g = Input[id.xy + float2(xPhase, xPhase + 20)].y;
+  float b = Input[id.xy + float2(xPhase, xPhase - 20)].z;
+  float3 px = float3(r, g, b);
+  float gray = 0.3 * px.x + 0.59 * px.y + 0.11 * px.z;
+  float3 tmp = float3(1, 1, 1);
+  if (gray > 0.2) {
+    tmp = px * 0.5 + float3(1, 0.8, 0.6) * 0.5;
+  } else {
+    tmp = px * 0.5 + float3(0.6, 0.8, 0.6) * 0.5;
+  }
+  float phase = abs(sin(time * 10 + id.y / 3));
+  Result[id.xy] = float4(tmp * phase, 1);
+}
